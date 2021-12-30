@@ -6,11 +6,11 @@
 ### Run tests
 
 ```shell
-pytest
+make test
 ```
 
-### Run module with sample data
+### Run `invaders` lib with sample data
 
 ```shell
-python main.py
+make run-sample
 ```
