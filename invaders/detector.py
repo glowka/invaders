@@ -1,33 +1,42 @@
+import itertools
+
 from typing import Type
 
 import numpy as np
 
-from invaders.score import DiffScoreEngine
+from invaders.score import MatrixDiffScoreEngine
 from invaders.score import ScoreEngine
 from invaders.shape import Shape
 
 
 class BaseDetector:
     score_engine_cls: Type[ScoreEngine]
-    min_accepted_score: int
+    detected_invader_min_score: int
 
-    def __init__(self, space: Shape, invader: Shape):
+    def __init__(self, space: Shape, invader: Shape, detected_invader_min_score=None):
         self.space = space
         self.invader = invader
         self.detected_invaders = []
+
+        if detected_invader_min_score is not None:
+            self.detected_invader_min_score = detected_invader_min_score
 
     def crawl(self):
         """
         Basic, unoptimized crawling implementation.
         """
-        for row in range(-self.invader.rows_num, self.space.rows_num):
-            for col in range(-self.invader.cols_num, self.space.cols_num):
+        for row in range(
+            -self.invader.rows_num // 2, self.space.rows_num - self.invader.rows_num // 2
+        ):
+            for col in range(
+                -self.invader.cols_num // 2, self.space.cols_num - self.invader.cols_num // 2
+            ):
                 self._detect(row, col)
         return self.detected_invaders
 
     def _detect(self, row, col):
         detected_invader = self.score_engine_cls(self.space, self.invader, row, col).detect()
-        if detected_invader.score > self.min_accepted_score:
+        if detected_invader.score > self.detected_invader_min_score:
             self.detected_invaders.append(detected_invader)
 
 
@@ -36,55 +45,74 @@ class PreFilteringDetector(BaseDetector):
     Detector executing precise score calculation only for lo
     """
 
-    max_fill_diff_ratio = 0.2
+    fill_ratio_max_diff = 0.3
+
+    def __init__(self, *args, fill_ratio_max_diff=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if fill_ratio_max_diff is not None:
+            self.fill_ratio_max_diff = fill_ratio_max_diff
 
     def crawl(self):
-        fill_counts = self._prepare_fill_count()
+        fill_counts_map = self._prepare_fill_counts_map()
         invader_fill_count = np.sum(self.invader.arr)
 
-        for row in range(0, self.space.rows_num - self.invader.rows_num):
-            current_fill_count = np.sum(fill_counts[row, : self.invader.cols_num - 1])
+        # Crawl inside the edges relying on fill_counts_map array to exclude obvious cases
+        # and call the scoring engine only when a precise assessment is required
+        for row in range(self.space.rows_num - self.invader.rows_num):
+            current_fill_count = np.sum(fill_counts_map[row, : self.invader.cols_num - 1])
 
-            for col in range(0, self.space.cols_num - self.invader.cols_num):
-                current_fill_count += fill_counts[row, col + self.invader.cols_num]
+            for col in range(self.space.cols_num - self.invader.cols_num):
+                current_fill_count += fill_counts_map[row, col + self.invader.cols_num]
 
                 if (
-                    abs(current_fill_count - invader_fill_count) / self.invader.size
-                    < self.max_fill_diff_ratio
+                    abs(current_fill_count - invader_fill_count) / invader_fill_count
+                    < self.fill_ratio_max_diff
                 ):
                     self._detect(row, col)
 
-                current_fill_count -= fill_counts[row, col]
+                current_fill_count -= fill_counts_map[row, col]
+
+        # Crawl outside the edges using standard brute force method
+        for row in self._range_outside(self.space.rows_num, self.invader.rows_num):
+            for col in self._range_inside_and_outside(self.space.cols_num, self.invader.cols_num):
+                self._detect(row, col)
+
+        for row in self._range_inside_and_outside(self.space.rows_num, self.invader.rows_num):
+            for col in self._range_outside(self.space.cols_num, self.invader.cols_num):
+                self._detect(row, col)
 
         return self.detected_invaders
 
-    def _prepare_fill_count(self):
+    _edge_depth = 0.5
+
+    def _range_inside_and_outside(self, space_size, invader_size):
+        return range(
+            -int(invader_size * self._edge_depth),
+            space_size - int(invader_size * self._edge_depth),
+        )
+
+    def _range_outside(self, space_size, invader_size):
+        return itertools.chain(
+            range(-int(invader_size * self._edge_depth), 0),
+            range(space_size - invader_size, space_size - int(invader_size * self._edge_depth)),
+        )
+
+    def _prepare_fill_counts_map(self):
         """
         Prepare 2d array that for each point (row, col) contains sum of filled points
         within `invader.rows_num` distance.
         """
-        # Minimize lookup time by using direct references
-        invader_rows_num = self.invader.rows_num
-        space_rows_num = self.space.rows_num
-        space_cols_num = self.space.cols_num
-        space_arr = self.space.arr
-
-        return np.array(
-            [
-                [
-                    np.sum(space_arr[row : row + invader_rows_num, col])
-                    for col in range(space_cols_num)
-                ]
-                for row in range(space_rows_num - invader_rows_num + 1)
-            ]
-        )
+        arr = np.full((self.space.rows_num, self.space.cols_num), 1000, dtype=int)
+        for row in range(self.space.rows_num - self.invader.rows_num + 1):
+            arr[row, :] = np.sum(self.space[row : row + self.invader.rows_num, :], axis=0)
+        return arr
 
 
 class DiffDetector(BaseDetector):
-    score_engine_cls = DiffScoreEngine
-    min_accepted_score = 0.82
+    score_engine_cls = MatrixDiffScoreEngine
+    detected_invader_min_score = 0.75
 
 
 class PreFilteringDiffDetector(PreFilteringDetector):
-    score_engine_cls = DiffScoreEngine
-    min_accepted_score = 0.82
+    score_engine_cls = MatrixDiffScoreEngine
+    detected_invader_min_score = 0.75

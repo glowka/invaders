@@ -11,16 +11,14 @@ def load_shape_from_file(file_path):
 
 class Shape:
     def __init__(self, arr: np.ndarray):
-        # Load arr rotating it so that there rows_num <= cols_num
-        self.rotated = arr.shape[0] > arr.shape[1]
-        self.arr = np.rot90(arr) if self.rotated else arr
+        self.arr = arr
 
     @classmethod
     def load_from_str(cls, txt):
         return cls(utils.arr_from_str(txt))
 
     def serialize_to_str(self):
-        return utils.arr_to_str(np.rot90(self.arr, k=-1) if self.rotated else self.arr)
+        return utils.arr_to_str(self.arr)
 
     def __str__(self):
         return self.serialize_to_str()

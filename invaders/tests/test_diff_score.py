@@ -15,7 +15,7 @@ o-o-----o-o
 
 def test_identical_100():
     invader = Shape.load_from_str(invader_txt)
-    assert score.DiffScoreEngine(invader, invader).detect().score == 1.0
+    assert score.MatrixDiffScoreEngine(invader, invader).detect().score == 1.0
 
 
 def test_different_2_chars():
@@ -34,9 +34,9 @@ def test_different_2_chars():
 
     invader1 = Shape.load_from_str(invader_txt)
     invader2 = Shape.load_from_str(similar_invader_txt)
-    assert score.DiffScoreEngine(space=invader2, shape=invader1).detect().score == (8 * 11 - 2) / (
-        8 * 11
-    )
+    assert score.MatrixDiffScoreEngine(space=invader2, invader=invader1).detect().score == (
+        8 * 11 - 2
+    ) / (8 * 11)
 
 
 def test_top_edge():
@@ -55,7 +55,7 @@ def test_top_edge():
 
     invader = Shape.load_from_str(invader_txt)
     space = Shape.load_from_str(invader_top_edge_txt)
-    assert score.DiffScoreEngine(space, invader, row=-3, col=0).detect().score == 1.0
+    assert score.MatrixDiffScoreEngine(space, invader, row=-3, col=0).detect().score == 1.0
 
 
 def test_bottom_edge():
@@ -74,4 +74,4 @@ def test_bottom_edge():
 
     invader = Shape.load_from_str(invader_txt)
     space = Shape.load_from_str(invader_bottom_edge_txt)
-    assert score.DiffScoreEngine(space, invader, row=3, col=0).detect().score == 1.0
+    assert score.MatrixDiffScoreEngine(space, invader, row=3, col=0).detect().score == 1.0
