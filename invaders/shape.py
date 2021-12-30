@@ -3,8 +3,8 @@ import numpy as np
 from invaders import utils
 
 
-def load_shape_from_file(file_path):
-    with open(file_path) as f:
+def load_shape_from_file(filename):
+    with open(filename) as f:
         txt = f.read()
     return Shape.load_from_str(txt)
 

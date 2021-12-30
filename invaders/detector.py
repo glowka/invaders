@@ -4,13 +4,14 @@ from typing import Type
 
 import numpy as np
 
+from invaders.score import BaseScoreEngine
 from invaders.score import MatrixDiffScoreEngine
-from invaders.score import ScoreEngine
+from invaders.score import SequenceDiffScoreEngine
 from invaders.shape import Shape
 
 
 class BaseDetector:
-    score_engine_cls: Type[ScoreEngine]
+    score_engine_cls: Type[BaseScoreEngine]
     detected_invader_min_score: int
 
     def __init__(self, space: Shape, invader: Shape, detected_invader_min_score=None):
@@ -40,9 +41,10 @@ class BaseDetector:
             self.detected_invaders.append(detected_invader)
 
 
-class PreFilteringDetector(BaseDetector):
+class FilteringDetector(BaseDetector):
     """
-    Detector executing precise score calculation only for lo
+    Detector that using basic fill count heuristic to execute heavy score calculation
+    on most promising points of space.
     """
 
     fill_ratio_max_diff = 0.3
@@ -81,6 +83,7 @@ class PreFilteringDetector(BaseDetector):
             for col in self._range_outside(self.space.cols_num, self.invader.cols_num):
                 self._detect(row, col)
 
+        self.detected_invaders.sort(key=lambda i: (i.row, i.col))
         return self.detected_invaders
 
     _edge_depth = 0.5
@@ -108,11 +111,16 @@ class PreFilteringDetector(BaseDetector):
         return arr
 
 
-class DiffDetector(BaseDetector):
+class MatrixDiffDetector(BaseDetector):
     score_engine_cls = MatrixDiffScoreEngine
-    detected_invader_min_score = 0.75
+    detected_invader_min_score = 0.8
 
 
-class PreFilteringDiffDetector(PreFilteringDetector):
+class MatrixDiffFilteringDetector(FilteringDetector):
     score_engine_cls = MatrixDiffScoreEngine
+    detected_invader_min_score = 0.8
+
+
+class SequenceDiffFilteringDetector(FilteringDetector):
+    score_engine_cls = SequenceDiffScoreEngine
     detected_invader_min_score = 0.75
