@@ -3,8 +3,8 @@ from functools import cached_property
 import numpy as np
 
 from invaders import utils
-from invaders.shape import DetectedInvader
-from invaders.shape import Shape
+from invaders.shapes import DetectedInvader
+from invaders.shapes import Shape
 
 
 class BaseScoreEngine:
@@ -23,7 +23,7 @@ class BaseScoreEngine:
         self.space_row = max(row, 0)
         self.space_col = max(col, 0)
 
-    def detect(self) -> "DetectedInvader":
+    def calculate(self) -> "DetectedInvader":
         raise NotImplementedError
 
     @staticmethod
@@ -59,7 +59,7 @@ class MatrixDiffScoreEngine(BaseScoreEngine):
     Score based on invader and space matrices diff.
     """
 
-    def detect(self):
+    def calculate(self):
         score = np.sum(self.subspace == self.subinvader) / (
             self.invader_rows_num * self.invader_cols_num
         )
@@ -80,7 +80,7 @@ class SequenceDiffScoreEngine(BaseScoreEngine):
     Score based on geometrical score derived from diff scores of all rows
     """
 
-    def detect(self):
+    def calculate(self):
         row_scores = []
         for invader_row, space_row in zip(self.subinvader, self.subspace):
             row_scores.append(np.sum(invader_row == space_row) / len(invader_row))

@@ -1,7 +1,7 @@
-from invaders.detector import MatrixDiffDetector
-from invaders.detector import MatrixDiffFilteringDetector
-from invaders.detector import SequenceDiffFilteringDetector
-from invaders.shape import load_shape_from_file
+from invaders.detectors import MatrixDiffDetector
+from invaders.detectors import MatrixDiffFilteringDetector
+from invaders.detectors import SequenceDiffFilteringDetector
+from invaders.shapes import load_shape_from_file
 
 _invaders_filenames = [
     "sample_data/invader1.txt",
@@ -47,12 +47,12 @@ def run_once_matrix_diff_filtering_detector(print_result=True):
     run_once(
         MatrixDiffFilteringDetector,
         print_result,
-        detector_params={"detected_invader_min_score": 0.82, "fill_ratio_max_diff": 0.2},
+        detector_params={"detected_invader_min_score": 0.83, "fill_ratio_max_diff": 0.2},
     )
 
 
 def run_once_matrix_diff_slow_detector(print_result=True):
-    run_once(MatrixDiffDetector, print_result, detector_params={"detected_invader_min_score": 0.82})
+    run_once(MatrixDiffDetector, print_result, detector_params={"detected_invader_min_score": 0.83})
 
 
 if __name__ == "__main__":

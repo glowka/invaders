@@ -1,5 +1,5 @@
-from invaders.detector import MatrixDiffFilteringDetector
-from invaders.shape import load_shape_from_file
+from invaders.detectors import MatrixDiffFilteringDetector
+from invaders.shapes import load_shape_from_file
 
 
 def test_invader1():
@@ -7,7 +7,7 @@ def test_invader1():
     space = load_shape_from_file("sample_data/space.txt")
 
     detector = MatrixDiffFilteringDetector(
-        space, invader, detected_invader_min_score=0.82, fill_ratio_max_diff=0.2
+        space, invader, detected_invader_min_score=0.83, fill_ratio_max_diff=0.2
     )
     detector.crawl()
     assert len(detector.detected_invaders) == 3
@@ -19,7 +19,7 @@ def test_invader2():
     space = load_shape_from_file("sample_data/space.txt")
 
     detector = MatrixDiffFilteringDetector(
-        space, invader, detected_invader_min_score=0.82, fill_ratio_max_diff=0.2
+        space, invader, detected_invader_min_score=0.83, fill_ratio_max_diff=0.2
     )
     detector.crawl()
     assert len(detector.detected_invaders) == 5
