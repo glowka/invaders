@@ -56,8 +56,13 @@ class BaseDetector:
 
 class FilteringDetector(BaseDetector):
     """
-    Detector that using basic fill count heuristic to execute heavy score calculation
-    on most promising points of space.
+    Detector that uses basic fill count heuristic to execute heavy score calculation
+    only for most promising points of space.
+
+    The heuristic is to sum fill count for any point of the space and compare it with fill count
+    of the shape: abs(PoS - I) / I.
+
+    If the fill ratio for is above `fill_ratio_max_diff` the point is ignored.
     """
 
     fill_ratio_max_diff = 0.3

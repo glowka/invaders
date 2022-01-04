@@ -77,7 +77,7 @@ class MatrixDiffScoreEngine(BaseScoreEngine):
 
 class SequenceDiffScoreEngine(BaseScoreEngine):
     """
-    Score based on geometrical score derived from diff scores of all rows
+    Score based on geometrical score derived from diff scores of all rows.
     """
 
     def calculate(self):
